@@ -38,7 +38,12 @@ class GeocodingService {
         'https://geocoding-api.open-meteo.com/v1/search?name=$query&count=10&language=pt&format=json',
       );
 
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Timeout na busca de cidades');
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

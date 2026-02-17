@@ -17,7 +17,12 @@ class WeatherService {
         '&start_date=2026-01-01&end_date=$todayStr',
       );
 
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception('Timeout: A conexão demorou muito. Verifique sua internet.');
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

@@ -6,7 +6,7 @@ import '../services/weather_service.dart';
 import '../widgets/month_grid.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -30,14 +30,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadTemperatureData() async {
     setState(() => _isLoading = true);
-    final data = await _weatherService.fetchTemperatureData(
-      latitude: _currentLat,
-      longitude: _currentLng,
-    );
-    setState(() {
-      _temperatureData = data;
-      _isLoading = false;
-    });
+    try {
+      final data = await _weatherService.fetchTemperatureData(
+        latitude: _currentLat,
+        longitude: _currentLng,
+      );
+      setState(() {
+        _temperatureData = data;
+        _isLoading = false;
+      });
+      if (data.isEmpty && mounted) {
+        _showError('Não foi possível carregar os dados. Verifique sua conexão com a internet.');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        _showError('Erro ao carregar dados: ${e.toString().replaceAll('Exception: ', '')}');
+      }
+    }
   }
   
   Future<void> _getCurrentLocation() async {
@@ -162,8 +172,14 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            onPressed: _isLoading ? null : _loadTemperatureData,
+            icon: const Icon(Icons.refresh, color: Color(0xFFE8E8E8)),
+            tooltip: 'Atualizar dados',
+          ),
+          IconButton(
             onPressed: _showLocationPicker,
             icon: const Icon(Icons.location_on_outlined, color: Color(0xFFE8E8E8)),
+            tooltip: 'Trocar localização',
           ),
         ],
       ),
@@ -185,7 +201,53 @@ class _HomeScreenState extends State<HomeScreen> {
                   strokeWidth: 3,
                 ),
               )
-            : SingleChildScrollView(
+            : _temperatureData.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.cloud_off,
+                          size: 80,
+                          color: Colors.white24,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Sem dados disponíveis',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Verifique sua conexão com a internet',
+                          style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _loadTemperatureData,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Tentar novamente'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E86DE),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -268,11 +330,11 @@ class CitySearchModal extends StatefulWidget {
   final VoidCallback onUseCurrentLocation;
 
   const CitySearchModal({
-    Key? key,
+    super.key,
     required this.geocodingService,
     required this.onLocationSelected,
     required this.onUseCurrentLocation,
-  }) : super(key: key);
+  });
 
   @override
   State<CitySearchModal> createState() => _CitySearchModalState();

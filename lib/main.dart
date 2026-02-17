@@ -6,12 +6,12 @@ void main() {
 }
 
 class TempTrackerApp extends StatelessWidget {
-  const TempTrackerApp({Key? key}) : super(key: key);
+  const TempTrackerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Temp Tracker',
+      title: 'TempTracker',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
